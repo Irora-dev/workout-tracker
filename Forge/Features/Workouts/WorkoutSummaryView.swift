@@ -60,7 +60,7 @@ struct WorkoutSummaryView: View {
                 Circle()
                     .fill(
                         RadialGradient(
-                            colors: [Color.nebulaGreen.opacity(0.3), Color.clear],
+                            colors: [Color.cosmosSuccess.opacity(0.3), Color.clear],
                             center: .center,
                             startRadius: 0,
                             endRadius: 80
@@ -72,7 +72,7 @@ struct WorkoutSummaryView: View {
 
                 Image(systemName: "checkmark.circle.fill")
                     .font(.system(size: 80))
-                    .foregroundStyle(Color.nebulaGreen)
+                    .foregroundStyle(Color.cosmosSuccess)
                     .scaleEffect(animateStats ? 1 : 0)
             }
 
@@ -120,7 +120,7 @@ struct WorkoutSummaryView: View {
             // Sets
             summaryStatCard(
                 icon: "repeat",
-                iconColor: .nebulaOrange,
+                iconColor: .nebulaGold,
                 value: "\(workout.totalSets)",
                 label: "Sets"
             )
@@ -128,7 +128,7 @@ struct WorkoutSummaryView: View {
             // Volume
             summaryStatCard(
                 icon: "scalemass.fill",
-                iconColor: .nebulaGreen,
+                iconColor: .cosmosSuccess,
                 value: formattedVolume,
                 label: "Volume (lbs)"
             )
@@ -195,14 +195,14 @@ struct WorkoutSummaryView: View {
                 .fill(Color.nebulaPurple.opacity(0.2))
                 .frame(width: 36, height: 36)
                 .overlay(
-                    Image(systemName: workoutExercise.exercise?.iconName ?? "dumbbell")
+                    Image(systemName: workoutExercise.exerciseIconName ?? "dumbbell")
                         .font(.system(size: 16))
                         .foregroundStyle(Color.nebulaPurple)
                 )
 
             // Exercise name
             VStack(alignment: .leading, spacing: 2) {
-                Text(workoutExercise.exercise?.name ?? "Exercise")
+                Text(workoutExercise.exerciseName)
                     .font(.cosmosBody)
                     .foregroundStyle(.white)
 
@@ -235,10 +235,12 @@ struct WorkoutSummaryView: View {
 
     private func bestSetDescription(for workoutExercise: WorkoutExercise) -> String {
         let completedSets = workoutExercise.sets.filter { $0.isCompleted }
-        guard let bestSet = completedSets.max(by: { ($0.weight * Double($0.reps)) < ($1.weight * Double($1.reps)) }) else {
+        guard let bestSet = completedSets.max(by: {
+            (($0.weight ?? 0) * Double($0.reps ?? 0)) < (($1.weight ?? 0) * Double($1.reps ?? 0))
+        }) else {
             return "-"
         }
-        return "\(Int(bestSet.weight)) lbs × \(bestSet.reps)"
+        return "\(Int(bestSet.weight ?? 0)) lbs × \(bestSet.reps ?? 0)"
     }
 
     // MARK: - Personal Records
@@ -271,10 +273,10 @@ struct WorkoutSummaryView: View {
                 }
                 .padding(CosmosSpacing.md)
                 .background(
-                    RoundedRectangle(cornerRadius: CosmosCornerRadius.md)
+                    RoundedRectangle(cornerRadius: CosmosRadius.md)
                         .fill(Color.nebulaGold.opacity(0.1))
                         .overlay(
-                            RoundedRectangle(cornerRadius: CosmosCornerRadius.md)
+                            RoundedRectangle(cornerRadius: CosmosRadius.md)
                                 .stroke(Color.nebulaGold.opacity(0.3), lineWidth: 1)
                         )
                 )
@@ -298,7 +300,7 @@ struct WorkoutSummaryView: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, CosmosSpacing.md)
                 .background(
-                    RoundedRectangle(cornerRadius: CosmosCornerRadius.md)
+                    RoundedRectangle(cornerRadius: CosmosRadius.md)
                         .fill(Color.cardBackground)
                 )
             }
@@ -312,12 +314,12 @@ struct WorkoutSummaryView: View {
                     Text("Save to Apple Health")
                 }
                 .font(.cosmosBody)
-                .foregroundStyle(Color.nebulaRed)
+                .foregroundStyle(Color.cosmosError)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, CosmosSpacing.md)
                 .background(
-                    RoundedRectangle(cornerRadius: CosmosCornerRadius.md)
-                        .stroke(Color.nebulaRed.opacity(0.5), lineWidth: 1)
+                    RoundedRectangle(cornerRadius: CosmosRadius.md)
+                        .stroke(Color.cosmosError.opacity(0.5), lineWidth: 1)
                 )
             }
         }
@@ -399,7 +401,7 @@ struct WorkoutShareCard: View {
         }
         .padding(CosmosSpacing.lg)
         .background(
-            RoundedRectangle(cornerRadius: CosmosCornerRadius.lg)
+            RoundedRectangle(cornerRadius: CosmosRadius.lg)
                 .fill(LinearGradient.cosmosBackground)
         )
         .frame(width: 320)
@@ -429,8 +431,10 @@ struct WorkoutShareCard: View {
 }
 
 #Preview {
-    let workout = Workout(workoutType: .gym)
-    workout.duration = 3600
-    return WorkoutSummaryView(workout: workout)
-        .environmentObject(AppState())
+    WorkoutSummaryView(workout: {
+        let workout = Workout(workoutType: .gym)
+        workout.endedAt = Date().addingTimeInterval(3600)
+        return workout
+    }())
+    .environmentObject(AppState())
 }

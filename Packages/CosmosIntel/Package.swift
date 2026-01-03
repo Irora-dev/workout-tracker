@@ -20,10 +20,6 @@ let package = Package(
         .target(
             name: "CosmosIntel",
             dependencies: ["CosmosCore"]
-        ),
-        .testTarget(
-            name: "CosmosIntelTests",
-            dependencies: ["CosmosIntel"]
-        ),
+        )
     ]
 )

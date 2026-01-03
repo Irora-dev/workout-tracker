@@ -169,7 +169,7 @@ struct SettingsView: View {
                 settingsRow(icon: "heart.fill", title: "Apple Health", trailing: {
                     Text(appState.healthKitService.isAuthorized ? "Connected" : "Not Connected")
                         .font(.cosmosCaption)
-                        .foregroundStyle(appState.healthKitService.isAuthorized ? Color.nebulaGreen : Color.cosmosTextSecondary)
+                        .foregroundStyle(appState.healthKitService.isAuthorized ? Color.cosmosSuccess : Color.cosmosTextSecondary)
                 }) {
                     Task {
                         try? await appState.healthKitService.requestAuthorization()
@@ -231,12 +231,12 @@ struct SettingsView: View {
                 } label: {
                     HStack(spacing: CosmosSpacing.md) {
                         Image(systemName: "trash")
-                            .foregroundStyle(Color.nebulaRed)
+                            .foregroundStyle(Color.cosmosError)
                             .frame(width: 24)
 
                         Text("Delete All Data")
                             .font(.cosmosBody)
-                            .foregroundStyle(Color.nebulaRed)
+                            .foregroundStyle(Color.cosmosError)
 
                         Spacer()
                     }

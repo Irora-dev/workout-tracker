@@ -111,7 +111,7 @@ struct ExercisePickerView: View {
         }
         .padding(CosmosSpacing.md)
         .background(
-            RoundedRectangle(cornerRadius: CosmosCornerRadius.md)
+            RoundedRectangle(cornerRadius: CosmosRadius.md)
                 .fill(Color.cardBackground)
         )
         .padding(.horizontal, CosmosSpacing.screenHorizontal)
@@ -313,14 +313,13 @@ struct ExerciseRowView: View {
 
     private var muscleGroupColor: Color {
         switch exercise.primaryMuscle {
-        case .chest: return .nebulaRed
+        case .chest: return .cosmosError
         case .back: return .nebulaPurple
-        case .shoulders: return .nebulaOrange
+        case .shoulders: return .nebulaGold
         case .biceps, .triceps, .forearms: return .nebulaCyan
-        case .quadriceps, .hamstrings, .glutes, .calves: return .nebulaGreen
-        case .core, .abs, .obliques: return .nebulaGold
+        case .quads, .hamstrings, .glutes, .calves, .hipFlexors: return .cosmosSuccess
+        case .abs, .obliques, .lowerBack: return .nebulaGold
         case .fullBody: return .nebulaMagenta
-        case .cardio: return .nebulaCyan
         }
     }
 }

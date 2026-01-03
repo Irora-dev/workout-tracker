@@ -68,7 +68,7 @@ struct HistoryView: View {
             }
         }
         .background(Color.cardBackground)
-        .clipShape(RoundedRectangle(cornerRadius: CosmosCornerRadius.md))
+        .clipShape(RoundedRectangle(cornerRadius: CosmosRadius.md))
     }
 
     // MARK: - Calendar Section

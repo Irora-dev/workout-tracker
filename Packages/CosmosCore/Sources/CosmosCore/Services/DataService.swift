@@ -39,9 +39,7 @@ public final class DataService: ObservableObject {
 
         let config = ModelConfiguration(
             schema: schema,
-            isStoredInMemoryOnly: false,
-            groupContainer: .identifier("group.com.forge.workouts"),
-            cloudKitDatabase: .private("iCloud.com.forge.workouts")
+            isStoredInMemoryOnly: false
         )
 
         do {
@@ -121,15 +119,15 @@ public final class DataService: ObservableObject {
     // MARK: - Workout Exercises
     public func addExercise(_ exercise: Exercise, to workout: Workout) -> WorkoutExercise {
         let workoutExercise = WorkoutExercise(
-            workout: workout,
             exercise: exercise,
-            orderIndex: workout.exercises.count
+            order: workout.exercises.count,
+            workout: workout
         )
         workout.exercises.append(workoutExercise)
         modelContext.insert(workoutExercise)
 
         // Add initial set
-        let initialSet = ExerciseSet(workoutExercise: workoutExercise, setNumber: 1)
+        let initialSet = ExerciseSet(setNumber: 1, workoutExercise: workoutExercise)
         workoutExercise.sets.append(initialSet)
         modelContext.insert(initialSet)
 
@@ -139,7 +137,7 @@ public final class DataService: ObservableObject {
 
     public func addSet(to workoutExercise: WorkoutExercise) -> ExerciseSet {
         let setNumber = workoutExercise.sets.count + 1
-        let exerciseSet = ExerciseSet(workoutExercise: workoutExercise, setNumber: setNumber)
+        let exerciseSet = ExerciseSet(setNumber: setNumber, workoutExercise: workoutExercise)
         workoutExercise.sets.append(exerciseSet)
         modelContext.insert(exerciseSet)
         try? modelContext.save()
@@ -165,15 +163,24 @@ public final class DataService: ObservableObject {
         limit: Int? = nil
     ) -> [Workout] {
         var descriptor = FetchDescriptor<Workout>(
-            predicate: #Predicate { $0.status == .completed },
             sortBy: [SortDescriptor(\.startedAt, order: .reverse)]
         )
 
+        // Fetch more than limit since we filter in memory
         if let limit = limit {
-            descriptor.fetchLimit = limit
+            descriptor.fetchLimit = limit * 2
         }
 
-        return (try? modelContext.fetch(descriptor)) ?? []
+        var workouts = (try? modelContext.fetch(descriptor)) ?? []
+
+        // Filter completed workouts in memory (SwiftData predicate has issues with enum rawValue)
+        workouts = workouts.filter { $0.status == .completed }
+
+        if let limit = limit {
+            workouts = Array(workouts.prefix(limit))
+        }
+
+        return workouts
     }
 
     public func fetchWorkout(byID id: UUID) -> Workout? {
@@ -202,12 +209,14 @@ public final class DataService: ObservableObject {
 
         let descriptor = FetchDescriptor<Workout>(
             predicate: #Predicate { workout in
-                workout.startedAt >= startOfDay && workout.startedAt < endOfDay && workout.status == .completed
+                workout.startedAt >= startOfDay && workout.startedAt < endOfDay
             },
             sortBy: [SortDescriptor(\.startedAt)]
         )
 
-        return (try? modelContext.fetch(descriptor)) ?? []
+        let workouts = (try? modelContext.fetch(descriptor)) ?? []
+        // Filter completed workouts in memory (SwiftData predicate has issues with enum rawValue)
+        return workouts.filter { $0.status == .completed }
     }
 
     // MARK: - Workout Plans
@@ -279,10 +288,10 @@ public final class DataService: ObservableObject {
 
     // MARK: - Stats
     public func totalWorkoutsCount() -> Int {
-        let descriptor = FetchDescriptor<Workout>(
-            predicate: #Predicate { $0.status == .completed }
-        )
-        return (try? modelContext.fetchCount(descriptor)) ?? 0
+        let descriptor = FetchDescriptor<Workout>()
+        let workouts = (try? modelContext.fetch(descriptor)) ?? []
+        // Filter completed workouts in memory (SwiftData predicate has issues with enum rawValue)
+        return workouts.filter { $0.status == .completed }.count
     }
 
     public func workoutsThisWeek() -> Int {
@@ -292,10 +301,12 @@ public final class DataService: ObservableObject {
 
         let descriptor = FetchDescriptor<Workout>(
             predicate: #Predicate { workout in
-                workout.startedAt >= weekStart && workout.status == .completed
+                workout.startedAt >= weekStart
             }
         )
-        return (try? modelContext.fetchCount(descriptor)) ?? 0
+        let workouts = (try? modelContext.fetch(descriptor)) ?? []
+        // Filter completed workouts in memory (SwiftData predicate has issues with enum rawValue)
+        return workouts.filter { $0.status == .completed }.count
     }
 
     // MARK: - Save

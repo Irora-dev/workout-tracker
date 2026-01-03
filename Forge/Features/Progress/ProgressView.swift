@@ -112,7 +112,7 @@ struct ProgressDashboardView: View {
             }
         }
         .background(Color.cardBackground)
-        .clipShape(RoundedRectangle(cornerRadius: CosmosCornerRadius.md))
+        .clipShape(RoundedRectangle(cornerRadius: CosmosRadius.md))
     }
 
     // MARK: - Chart Section
@@ -421,6 +421,8 @@ extension CosmosCore.PersonalRecord {
         case .maxVolume:
             return "\(Int(value)) lbs vol"
         case .fastestTime:
+            return String(format: "%.1f min", value / 60)
+        case .longestTime:
             return String(format: "%.1f min", value / 60)
         case .longestDistance:
             return String(format: "%.1f mi", value)

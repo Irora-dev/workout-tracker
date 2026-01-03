@@ -75,7 +75,7 @@ struct PlansView: View {
         }
         .padding(CosmosSpacing.md)
         .background(
-            RoundedRectangle(cornerRadius: CosmosCornerRadius.md)
+            RoundedRectangle(cornerRadius: CosmosRadius.md)
                 .fill(Color.cardBackground)
         )
     }
@@ -151,10 +151,9 @@ struct ActivePlanBanner: View {
                 // Progress ring
                 CosmosProgressRing(
                     progress: plan.progressPercentage,
-                    lineWidth: 4,
-                    gradient: LinearGradient.cosmosPurple
+                    size: .small,
+                    showPercentage: false
                 )
-                .frame(width: 50, height: 50)
 
                 // Plan info
                 VStack(alignment: .leading, spacing: 2) {
@@ -179,10 +178,10 @@ struct ActivePlanBanner: View {
             }
             .padding(CosmosSpacing.md)
             .background(
-                RoundedRectangle(cornerRadius: CosmosCornerRadius.md)
+                RoundedRectangle(cornerRadius: CosmosRadius.md)
                     .fill(Color.nebulaPurple.opacity(0.15))
                     .overlay(
-                        RoundedRectangle(cornerRadius: CosmosCornerRadius.md)
+                        RoundedRectangle(cornerRadius: CosmosRadius.md)
                             .stroke(Color.nebulaPurple.opacity(0.3), lineWidth: 1)
                     )
             )
@@ -256,14 +255,14 @@ struct PlanCardView: View {
 
     private var categoryColor: Color {
         switch plan.category {
-        case .strength: return .nebulaRed
+        case .strength: return .cosmosError
         case .hypertrophy: return .nebulaPurple
         case .endurance: return .nebulaCyan
-        case .weightLoss: return .nebulaOrange
-        case .running: return .nebulaGreen
+        case .weightLoss: return .nebulaGold
+        case .running: return .cosmosSuccess
         case .swimming: return .nebulaCyan
         case .cycling: return .nebulaGold
-        case .hiit: return .nebulaRed
+        case .hiit: return .cosmosError
         case .flexibility: return .nebulaLavender
         case .beginner: return .nebulaMagenta
         }
@@ -283,9 +282,9 @@ struct PlanCardView: View {
 
     private var difficultyColor: Color {
         switch plan.difficulty {
-        case .beginner: return .nebulaGreen
+        case .beginner: return .cosmosSuccess
         case .intermediate: return .nebulaGold
-        case .advanced: return .nebulaRed
+        case .advanced: return .cosmosError
         }
     }
 
@@ -433,7 +432,7 @@ struct PlanDetailView: View {
                             .padding(.horizontal, CosmosSpacing.md)
                             .padding(.vertical, CosmosSpacing.sm)
                             .background(
-                                RoundedRectangle(cornerRadius: CosmosCornerRadius.md)
+                                RoundedRectangle(cornerRadius: CosmosRadius.md)
                                     .fill(selectedDayIndex == index ? Color.nebulaPurple : Color.cardBackground)
                             )
                         }
@@ -484,7 +483,7 @@ struct PlanDetailView: View {
                 }
                 .padding(CosmosSpacing.md)
                 .background(
-                    RoundedRectangle(cornerRadius: CosmosCornerRadius.md)
+                    RoundedRectangle(cornerRadius: CosmosRadius.md)
                         .fill(Color.cardBackground)
                 )
             }

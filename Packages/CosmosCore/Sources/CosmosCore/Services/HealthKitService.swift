@@ -209,8 +209,8 @@ public final class HealthKitService: ObservableObject {
         }
 
         let unit = HKUnit.count().unitDivided(by: .minute())
-        let average = statistics.averageQuantity()?.doubleValue(for: unit).map { Int($0) }
-        let max = statistics.maximumQuantity()?.doubleValue(for: unit).map { Int($0) }
+        let average = statistics.averageQuantity().map { Int($0.doubleValue(for: unit)) }
+        let max = statistics.maximumQuantity().map { Int($0.doubleValue(for: unit)) }
 
         // Fetch resting heart rate separately
         var resting: Int?
@@ -231,7 +231,7 @@ public final class HealthKitService: ObservableObject {
                 }
                 healthStore.execute(query)
             }
-            resting = restingStats?.mostRecentQuantity()?.doubleValue(for: unit).map { Int($0) }
+            resting = restingStats?.mostRecentQuantity().map { Int($0.doubleValue(for: unit)) }
         }
 
         return (average, max, resting)

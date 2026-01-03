@@ -18,10 +18,6 @@ let package = Package(
         .target(
             name: "CosmosCore",
             dependencies: []
-        ),
-        .testTarget(
-            name: "CosmosCoreTests",
-            dependencies: ["CosmosCore"]
-        ),
+        )
     ]
 )

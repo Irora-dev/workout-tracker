@@ -78,10 +78,9 @@ public final class Exercise {
         case .biceps: return "figure.strengthtraining.traditional"
         case .triceps: return "figure.strengthtraining.functional"
         case .forearms: return "hand.raised.fill"
-        case .quadriceps, .hamstrings, .glutes, .calves: return "figure.walk"
-        case .core, .abs, .obliques: return "figure.core.training"
+        case .quads, .hamstrings, .glutes, .calves, .hipFlexors: return "figure.walk"
+        case .abs, .obliques, .lowerBack: return "figure.core.training"
         case .fullBody: return "figure.highintensity.intervaltraining"
-        case .cardio: return "figure.run"
         }
     }
 

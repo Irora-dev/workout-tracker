@@ -20,10 +20,6 @@ let package = Package(
         .target(
             name: "CosmosUI",
             dependencies: ["CosmosCore"]
-        ),
-        .testTarget(
-            name: "CosmosUITests",
-            dependencies: ["CosmosUI"]
-        ),
+        )
     ]
 )

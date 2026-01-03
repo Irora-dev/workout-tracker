@@ -117,7 +117,7 @@ struct SubscriptionView: View {
         }
         .padding(CosmosSpacing.lg)
         .background(
-            RoundedRectangle(cornerRadius: CosmosCornerRadius.lg)
+            RoundedRectangle(cornerRadius: CosmosRadius.lg)
                 .fill(Color.cardBackground)
         )
     }
@@ -142,7 +142,7 @@ struct SubscriptionView: View {
             Spacer()
 
             Image(systemName: "checkmark")
-                .foregroundStyle(Color.nebulaGreen)
+                .foregroundStyle(Color.cosmosSuccess)
         }
     }
 
@@ -177,7 +177,7 @@ struct SubscriptionView: View {
                         .padding(.vertical, 4)
                         .background(
                             Capsule()
-                                .fill(Color.nebulaGreen)
+                                .fill(Color.cosmosSuccess)
                         )
                 } else {
                     Spacer()
@@ -207,10 +207,10 @@ struct SubscriptionView: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, CosmosSpacing.lg)
             .background(
-                RoundedRectangle(cornerRadius: CosmosCornerRadius.md)
+                RoundedRectangle(cornerRadius: CosmosRadius.md)
                     .fill(isSelected ? Color.nebulaPurple.opacity(0.3) : Color.cardBackground)
                     .overlay(
-                        RoundedRectangle(cornerRadius: CosmosCornerRadius.md)
+                        RoundedRectangle(cornerRadius: CosmosRadius.md)
                             .stroke(isSelected ? Color.nebulaPurple : Color.clear, lineWidth: 2)
                     )
             )
@@ -219,31 +219,33 @@ struct SubscriptionView: View {
 
     // MARK: - Subscribe Button
     private var subscribeButton: some View {
-        Button {
-            subscribe()
-        } label: {
-            HStack {
-                if isProcessing {
-                    ProgressView()
-                        .tint(.white)
-                } else {
-                    Text("Start Free Trial")
-                        .font(.cosmosHeadline)
+        VStack(spacing: CosmosSpacing.sm) {
+            Button {
+                subscribe()
+            } label: {
+                HStack {
+                    if isProcessing {
+                        ProgressView()
+                            .tint(.white)
+                    } else {
+                        Text("Start Free Trial")
+                            .font(.cosmosHeadline)
+                    }
                 }
+                .foregroundStyle(.white)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, CosmosSpacing.md)
+                .background(
+                    LinearGradient.cosmosPurple
+                )
+                .clipShape(RoundedRectangle(cornerRadius: CosmosRadius.md))
             }
-            .foregroundStyle(.white)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, CosmosSpacing.md)
-            .background(
-                LinearGradient.cosmosPurple
-            )
-            .clipShape(RoundedRectangle(cornerRadius: CosmosCornerRadius.md))
-        }
-        .disabled(isProcessing)
+            .disabled(isProcessing)
 
-        Text("7-day free trial, then \(selectedPlan.price)\(selectedPlan.period)")
-            .font(.cosmosCaption)
-            .foregroundStyle(Color.cosmosTextSecondary)
+            Text("7-day free trial, then \(selectedPlan.price)\(selectedPlan.period)")
+                .font(.cosmosCaption)
+                .foregroundStyle(Color.cosmosTextSecondary)
+        }
     }
 
     // MARK: - Footer

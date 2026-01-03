@@ -184,7 +184,7 @@ struct ActiveWorkoutView: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, CosmosSpacing.md)
             .background(
-                RoundedRectangle(cornerRadius: CosmosCornerRadius.md)
+                RoundedRectangle(cornerRadius: CosmosRadius.md)
                     .stroke(Color.nebulaCyan.opacity(0.5), style: StrokeStyle(lineWidth: 1, dash: [8]))
             )
         }
@@ -218,7 +218,7 @@ struct ActiveWorkoutView: View {
 
     private func finishWorkout() {
         viewModel.stopTimer()
-        workout.duration = viewModel.elapsedTime
+        workout.complete()  // This sets endedAt which is used to compute duration
         appState.endWorkout()
         appState.presentSheet(.workoutSummary(workout))
     }
@@ -249,7 +249,7 @@ final class ActiveWorkoutViewModel: ObservableObject {
     var totalVolume: Double {
         exercises.flatMap { $0.sets }
             .filter { $0.isCompleted }
-            .reduce(0) { $0 + ($1.weight * Double($1.reps)) }
+            .reduce(0) { $0 + (($1.weight ?? 0) * Double($1.reps ?? 0)) }
     }
 
     var formattedVolume: String {
@@ -391,15 +391,13 @@ struct ExerciseCardView: View {
 
                     // Exercise name and info
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(workoutExercise.exercise?.name ?? "Exercise")
+                        Text(workoutExercise.exerciseName)
                             .font(.cosmosHeadline)
                             .foregroundStyle(.white)
 
-                        if let muscle = workoutExercise.exercise?.primaryMuscle {
-                            Text(muscle.displayName)
-                                .font(.cosmosCaption)
-                                .foregroundStyle(Color.cosmosTextSecondary)
-                        }
+                        Text("\(workoutExercise.sets.count) sets")
+                            .font(.cosmosCaption)
+                            .foregroundStyle(Color.cosmosTextSecondary)
                     }
 
                     Spacer()
@@ -445,7 +443,7 @@ struct ExerciseCardView: View {
                         SetRowView(
                             setNumber: index + 1,
                             set: set,
-                            previousSet: workoutExercise.exercise?.previousSetData(at: index),
+                            previousSet: nil,
                             onUpdate: { weight, reps in onUpdateSet(set, weight, reps) },
                             onComplete: { onCompleteSet(set) },
                             onDelete: { onDeleteSet(set) }
@@ -478,7 +476,7 @@ struct ExerciseCardView: View {
             .fill(Color.nebulaPurple.opacity(0.2))
             .frame(width: 40, height: 40)
             .overlay(
-                Image(systemName: workoutExercise.exercise?.iconName ?? "dumbbell")
+                Image(systemName: workoutExercise.exerciseIconName ?? "dumbbell")
                     .font(.system(size: 18))
                     .foregroundStyle(Color.nebulaPurple)
             )
@@ -507,7 +505,7 @@ struct SetRowView: View {
             // Set number
             Text("\(setNumber)")
                 .font(.cosmosBody)
-                .foregroundStyle(set.isCompleted ? Color.nebulaGreen : .white)
+                .foregroundStyle(set.isCompleted ? Color.cosmosSuccess : .white)
                 .frame(width: 40)
 
             // Previous
@@ -532,13 +530,13 @@ struct SetRowView: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, CosmosSpacing.xs)
                 .background(
-                    RoundedRectangle(cornerRadius: CosmosCornerRadius.sm)
+                    RoundedRectangle(cornerRadius: CosmosRadius.sm)
                         .fill(Color.cardBackground)
                 )
                 .focused($focusedField, equals: .weight)
                 .onChange(of: weightText) { _, newValue in
                     if let weight = Double(newValue) {
-                        onUpdate(weight, set.reps)
+                        onUpdate(weight, set.reps ?? 0)
                     }
                 }
 
@@ -551,13 +549,13 @@ struct SetRowView: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, CosmosSpacing.xs)
                 .background(
-                    RoundedRectangle(cornerRadius: CosmosCornerRadius.sm)
+                    RoundedRectangle(cornerRadius: CosmosRadius.sm)
                         .fill(Color.cardBackground)
                 )
                 .focused($focusedField, equals: .reps)
                 .onChange(of: repsText) { _, newValue in
                     if let reps = Int(newValue) {
-                        onUpdate(set.weight, reps)
+                        onUpdate(set.weight ?? 0, reps)
                     }
                 }
 
@@ -571,16 +569,16 @@ struct SetRowView: View {
             } label: {
                 Image(systemName: set.isCompleted ? "checkmark.circle.fill" : "circle")
                     .font(.system(size: 24))
-                    .foregroundStyle(set.isCompleted ? Color.nebulaGreen : Color.cosmosTextTertiary)
+                    .foregroundStyle(set.isCompleted ? Color.cosmosSuccess : Color.cosmosTextTertiary)
             }
             .frame(width: 44)
         }
         .padding(.horizontal, CosmosSpacing.md)
         .padding(.vertical, CosmosSpacing.xs)
-        .background(set.isCompleted ? Color.nebulaGreen.opacity(0.1) : Color.clear)
+        .background(set.isCompleted ? Color.cosmosSuccess.opacity(0.1) : Color.clear)
         .onAppear {
-            weightText = set.weight > 0 ? String(format: "%.0f", set.weight) : ""
-            repsText = set.reps > 0 ? "\(set.reps)" : ""
+            weightText = (set.weight ?? 0) > 0 ? String(format: "%.0f", set.weight ?? 0) : ""
+            repsText = (set.reps ?? 0) > 0 ? "\(set.reps ?? 0)" : ""
         }
         .swipeActions(edge: .trailing) {
             Button(role: .destructive) {
@@ -651,10 +649,9 @@ struct RestTimerSheet: View {
             // Progress ring
             CosmosProgressRing(
                 progress: viewModel.restTimeRemaining / 90,
-                lineWidth: 8,
-                gradient: LinearGradient.cosmosCyan
+                size: .large,
+                showPercentage: false
             )
-            .frame(width: 100, height: 100)
 
             // Preset buttons
             HStack(spacing: CosmosSpacing.sm) {
