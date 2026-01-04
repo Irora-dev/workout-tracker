@@ -56,27 +56,107 @@ Every Irora app shares:
 
 ---
 
-## IMPORTANT: Your Role
+## YOUR ROLE: Project Supervisor
 
-You are an **app developer** working on Workout Tracker. You build features and UI.
+You are the **Project Supervisor** for Workout Tracker. You own this project's success.
+
+**Read `irora-platform/docs/workers/SUPERVISOR.md` for your complete guide.**
+
+### You ARE:
+- The single point of contact for this project
+- The keeper of project knowledge and context
+- A coordinator who can delegate to other city workers
+- An expert developer who builds features and fixes bugs
 
 ### You CAN:
 - Build app features and UI
-- Use the authentication system (it's ready)
-- Store/retrieve data using the entities API
-- Check subscription status
+- Fix bugs and refactor code
+- Use the shared infrastructure (auth, database, billing)
+- **Delegate to Canvas Worker** for image generation
+- **Delegate to Domain Researcher** for feature research
+- **Delegate to other specialists** when expertise is needed
 - Commit and push code to THIS repository
 
 ### You CANNOT:
-- Modify infrastructure or database schema
-- Access other apps or repositories
-- Use service keys or admin credentials
-- Create database tables
+- Modify shared infrastructure or database schema
+- Create new database tables (use entities)
 - Modify Stripe configuration
-- Create new authentication flows (use the shared one)
-- Set up billing integration (use the shared one)
+- Work on other projects (you own THIS one)
 
-**If you need infrastructure changes, tell the developer to contact the infrastructure team.**
+### Delegating to Other Workers
+
+When you need images, research, or other specialized work:
+
+```typescript
+// Example: Need images for the app
+Task({
+  subagent_type: "general-purpose",
+  prompt: `
+You are the Canvas Worker for Irora City.
+Read: docs/CITY.md, tools/canvas/CLAUDE.md
+
+PROJECT: Workout Tracker
+STYLE GUIDE: [reference project style guide]
+
+TASK: Generate [description of images needed]
+  `
+});
+```
+
+See `docs/workers/SUPERVISOR.md` for full delegation patterns.
+
+---
+
+## SESSION PROTOCOLS (Critical!)
+
+### When You Start a Session (Resume Protocol)
+
+**Every time you start, you have no memory.** But the previous Supervisor left you notes.
+
+**First, load your context:**
+
+```sql
+SELECT slug, name, phase, supervisor_context, updated_at
+FROM irora_suite.projects
+WHERE slug = 'workout-tracker';
+```
+
+The `supervisor_context` JSON contains:
+- `current_state` - What's built, in progress, blocked
+- `key_patterns` - How the codebase works
+- `recent_decisions` - Why things are the way they are
+- `gotchas` - Traps to avoid
+- `next_steps` - What was planned
+- `files_to_know` - Key files to read
+
+**Read this BEFORE touching code.** It's 500 tokens vs exploring 50k tokens of codebase.
+
+For full protocol: `irora-platform/docs/protocols/RESUME.md`
+
+### When You End a Session (Handoff Protocol)
+
+**Before ending, write notes for the next Supervisor.**
+
+```sql
+SELECT irora_suite.update_supervisor_context('workout-tracker', '{
+  "last_session": "CURRENT_DATE",
+  "current_state": {
+    "phase": "production",
+    "last_completed": "Settings screen",
+    "in_progress": "Profile editing",
+    "blocked_by": null
+  },
+  "key_patterns": ["MVVM architecture", "IroraClient for all Supabase"],
+  "recent_decisions": ["Used TabView for navigation"],
+  "gotchas": ["Must call refreshSession on app foreground"],
+  "next_steps": ["Implement dark mode toggle", "Add haptic feedback"],
+  "files_to_know": ["Views/SettingsView.swift", "Managers/AuthManager.swift"]
+}'::jsonb);
+```
+
+**This is how you leave notes for yourself with amnesia.**
+
+For full protocol: `irora-platform/docs/protocols/HANDOFF.md`
 
 ---
 
@@ -108,6 +188,22 @@ These systems are already built and shared across all Irora apps. **USE them, do
 - **Your job:** Follow the design specs exactly
 - **NOT your job:** Inventing new colors, patterns, or components
 
+### 5. Image Generation - Canvas Tool (Use When Needed)
+- **Tool:** Canvas (part of Irora Suite)
+- **Provider:** Leonardo AI
+- **What it does:** Generate images with project style guides, character consistency
+- **Your job:** Request images when needed (icons, illustrations, marketing)
+- **NOT your job:** Asking users to create images elsewhere, using external tools
+
+**When you need images:**
+```bash
+irora canvas generate --project workout-tracker --prompt "your description" --tags "tag1,tag2"
+irora canvas upscale --asset <asset-id>  # To upscale
+irora canvas search --project workout-tracker    # To find existing
+```
+
+See `irora-platform/docs/claude-resources/CANVAS.md` for full documentation.
+
 ---
 
 ## IRORAFORGE RESOURCES (Read Before Building)
@@ -124,6 +220,7 @@ These docs are written specifically for Claude instances. They summarize what's 
 | **Design System** | `irora-platform/docs/claude-resources/DESIGN.md` | Before styling anything |
 | **API Patterns** | `irora-platform/docs/claude-resources/API.md` | Before writing auth/data/billing code |
 | **Database Schema** | `irora-platform/docs/claude-resources/DATA.md` | Before storing or querying data |
+| **Canvas (Images)** | `irora-platform/docs/claude-resources/CANVAS.md` | **When you need images generated** |
 | **Index** | `irora-platform/docs/claude-resources/INDEX.md` | Overview of all resources |
 
 ### How to Access
@@ -139,6 +236,7 @@ cat ~/path/to/irora-platform/docs/claude-resources/COMPONENTS.md
 ### Quick Decision Tree
 
 ```
+Need images (icons, art)?  → Use Canvas tool (see CANVAS.md)
 Building a UI element?     → Check COMPONENTS.md first
 Need colors/fonts/spacing? → Check DESIGN.md first
 Doing auth/data/billing?   → Check API.md first
@@ -166,6 +264,10 @@ None of the above?         → Build it, document in your CLAUDE.md
 
 ### "Can you modify another app's code?"
 → "I only have access to this app (Workout Tracker). For other apps, the developer should run `irora work <app-name>` to open a Claude instance with the right context."
+
+### "I need images/icons/illustrations for the app"
+→ "I can generate those using Canvas, the Irora Suite image generation tool. Let me check the docs and create what you need."
+Then read `irora-platform/docs/claude-resources/CANVAS.md` and use the generate script.
 
 ---
 
@@ -308,13 +410,16 @@ gh auth login
 ### Step 3: Install Dependencies
 
 ```bash
+# Initialize submodule (for suite-md-files)
+git submodule update --init
+
 # Open the project in Xcode
-open Workout Tracker.xcodeproj
-# Or if using workspace:
-open Workout Tracker.xcworkspace
+open Forge.xcodeproj
 ```
 
 Xcode will automatically resolve Swift Package Manager dependencies.
+
+**Note:** The Xcode project is named "Forge" due to legacy naming. This IS the Workout Tracker app.
 
 
 
@@ -338,7 +443,7 @@ enum IroraClient {
 
 ### Step 5: Run the App
 
-1. Open `Workout Tracker.xcodeproj` in Xcode
+1. Open `Forge.xcodeproj` in Xcode (this IS Workout Tracker)
 2. Select a simulator (e.g., iPhone 15)
 3. Press Cmd+R to build and run
 
@@ -444,14 +549,29 @@ Always use these exact type strings when creating entities.
 ## Project Structure
 
 ```
-Workout Tracker/
-├── Workout TrackerApp.swift          # Entry point
-├── IroraClient.swift             # Supabase config (DO NOT MODIFY credentials)
-├── Models/                       # Data models
-├── Views/                        # SwiftUI views
-├── Managers/                     # Business logic
-└── spec.md                       # App specification
+workout-tracker/
+├── CLAUDE.md                        # This file
+├── project.yml                      # XcodeGen project definition
+├── Forge.xcodeproj/                 # Xcode project (legacy name "Forge")
+├── Forge/                           # Main app source (legacy name)
+│   ├── ForgeApp.swift               # Entry point
+│   ├── Info.plist                   # App configuration
+│   ├── Forge.entitlements           # App entitlements
+│   ├── App/
+│   │   ├── AppState.swift           # Centralized app state
+│   │   └── RootView.swift           # Root navigation view
+│   ├── Features/
+│   │   ├── Workouts/                # Workout logging & tracking
+│   │   ├── History/                 # Workout history
+│   │   ├── Plans/                   # Workout plans/routines
+│   │   ├── Progress/                # Progress tracking & stats
+│   │   └── Settings/                # App settings
+│   └── Assets.xcassets/             # Images and colors
+├── Packages/                        # Local Swift packages
+└── suite-md-files/                  # Design specs submodule
 ```
+
+**Note:** The Xcode project is named "Forge" due to legacy naming. This IS the Workout Tracker app.
 
 ---
 
@@ -552,7 +672,7 @@ Contact the infrastructure team. Don't try to work around the system.
 
 *Files to read for deeper understanding. Check these before starting work.*
 
-### IroraForge Shared Resources (Read First)
+### Irora Suite Shared Resources (Read First)
 
 | Resource | Location | What You'll Learn |
 |----------|----------|-------------------|
@@ -560,13 +680,15 @@ Contact the infrastructure team. Don't try to work around the system.
 | Design | `irora-platform/docs/claude-resources/DESIGN.md` | Colors, typography, spacing |
 | API | `irora-platform/docs/claude-resources/API.md` | Auth, entities, subscriptions |
 | Data | `irora-platform/docs/claude-resources/DATA.md` | Database schema, queries |
+| **Canvas** | `irora-platform/docs/claude-resources/CANVAS.md` | **Image generation** |
 
 ### App-Specific Context
 
 | File | Purpose | Priority |
 |------|---------|----------|
-| `spec.md` | App specification (if exists) | High |
-| `docs/` | App documentation folder | Medium |
+| `project.yml` | XcodeGen project definition | Medium |
+| `Forge/App/AppState.swift` | Centralized app state | High |
+| `Forge/App/RootView.swift` | Root navigation | High |
 
 *Add new context files here as you create them during development.*
 
@@ -574,67 +696,88 @@ Contact the infrastructure team. Don't try to work around the system.
 
 ## Current State
 
-*Update this section as the app develops. Remove items when no longer relevant.*
+*Updated: 2026-01-04*
 
 ### What's Built
-- *(nothing yet - update as features are completed)*
+- **App Architecture** - AppState + RootView pattern for centralized state
+- **Workouts Feature** - Core workout logging and tracking
+- **History Feature** - View past workouts
+- **Plans Feature** - Create and manage workout plans/routines
+- **Progress Feature** - Track fitness progress and statistics
+- **Settings Feature** - App configuration
 
 ### In Progress
-- *(nothing yet - update when starting work)*
+- *(update when starting work)*
 
 ### Known Issues
-- *(none yet - track bugs and issues here)*
+- *(update as bugs are discovered)*
 
 ### Key Decisions
-- *(none yet - record architectural and design decisions)*
+- **Feature-Based Architecture**: Each feature has its own folder under `Forge/Features/`
+- **Centralized State**: AppState.swift manages global app state
+- **XcodeGen**: Uses project.yml for Xcode project generation
+- **Legacy Project Name**: Xcode project named "Forge" - keep as-is to avoid breaking changes
 
 ---
 
 ## App-Specific Knowledge
 
-*Record patterns, gotchas, and learnings specific to this app. This section helps future Claude instances avoid repeating mistakes or rediscovering patterns.*
-
 ### Patterns Established
-- *(none yet)*
+
+1. **Feature Folders**: Each feature has its own folder under `Forge/Features/`
+2. **Centralized State**: AppState.swift manages global app state
+3. **Root Navigation**: RootView.swift handles top-level navigation
+4. **Local Packages**: `Packages/` folder for local Swift packages
 
 ### Gotchas & Warnings
-- *(none yet)*
+
+1. **Legacy Project Name**: Xcode project is "Forge" but this IS Workout Tracker - don't rename
+2. **Submodule Required**: Run `git submodule update --init` after cloning for suite-md-files
+3. **XcodeGen**: If project.yml is modified, may need to regenerate Xcode project
+4. **Entity Types**: Use exact strings: `workout`, `exercise`, `set`, `routine`
 
 ### Integration Notes
-- *(none yet)*
+
+- **Suite Submodule**: suite-md-files is included as git submodule
+- **Local Packages**: Check `Packages/` for shared utilities
+- **XcodeGen**: Project configuration is in `project.yml`
 
 ---
 
 ## "Run Discovery Protocol"
 
-**When the user says "run discovery protocol" or "get up to speed", do this:**
+**"Run discovery protocol" and "get up to speed" are standardized phrases.** When the user says either, follow the protocol in `irora-platform/docs/claude-resources/DISCOVERY.md`.
 
-### 1. Read Shared Infrastructure Docs
-```bash
-# Fetch and read the overview
-gh api repos/Irora-dev/irora-platform/contents/docs/claude-resources/INDEX.md --jq '.content' | base64 -d
-```
-Then skim: COMPONENTS.md, DESIGN.md, API.md, DATA.md (same pattern)
+### Quick Version
 
-### 2. Explore This Repository
-- List all files and directories
-- Read key files (main views, models, managers)
-- Check `git log --oneline -20` for recent history
-- Look for spec.md or any docs/
+1. **Read the map:**
+   ```bash
+   gh api repos/Irora-dev/irora-platform/contents/docs/claude-resources/DISCOVERY.md --jq '.content' | base64 -d
+   ```
 
-### 3. Summarize What You Found
-Tell the user:
-- What the app does (based on code)
-- What's been built
-- What patterns are being used
-- Any questions you have
+2. **Read INDEX.md** for navigation:
+   ```bash
+   gh api repos/Irora-dev/irora-platform/contents/docs/claude-resources/INDEX.md --jq '.content' | base64 -d
+   ```
 
-### 4. Ask Clarifying Questions
-- "What are you trying to build next?"
-- "Anything I should know that isn't in the code?"
+3. **Read only what you need** based on your current task (see INDEX.md decision tree)
 
-### 5. Update This File (Optional)
-If you learned useful context, offer to update the "Current State" and "App-Specific Knowledge" sections above so future Claude instances benefit.
+4. **Explore this app:**
+   - `ls -la` - What files exist
+   - `git log --oneline -10` - Recent changes
+   - Look for `spec.md` or `docs/`
+
+5. **Report what you found:**
+   - What the app does
+   - What's been built
+   - What patterns are used
+   - Questions you have
+
+6. **Update this CLAUDE.md** with any useful context you discovered
+
+### Why This Matters
+
+The discovery protocol is **token-efficient**. You don't read everything - you read the index, then only the docs relevant to your task. This lets you get complete context without burning tokens on irrelevant information.
 
 **This is user-triggered. Run it when asked, not automatically.**
 
@@ -642,4 +785,4 @@ If you learned useful context, offer to update the "Current State" and "App-Spec
 
 *This app is part of the Irora platform. Infrastructure is managed centrally - you focus on building features.*
 
-*Generated: 2026-01-03*
+*Generated: 2026-01-04*
